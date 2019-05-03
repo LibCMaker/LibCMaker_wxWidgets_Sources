@@ -318,7 +318,6 @@ library:
 @itemdef{wxUSE_ACCESSIBILITY, Enable accessibility support}
 @itemdef{wxUSE_ACTIVEX, Use wxActiveXContainer and related classes.}
 @itemdef{wxUSE_COMBOCTRL_POPUP_ANIMATION, See wx/msw/combo.h file.}
-@itemdef{wxUSE_COMCTL32_SAFELY, See src/msw/treectrl.cpp file.}
 @itemdef{wxUSE_COMMON_DIALOGS, Enable use of windows common dialogs from header commdlg.h; example PRINTDLG.}
 @itemdef{wxUSE_CRASHREPORT, Use wxCrashReport class.}
 @itemdef{wxUSE_DATEPICKCTRL_GENERIC, Use generic wxDatePickerCtrl implementation in addition to the native one.}
@@ -348,6 +347,9 @@ compilers. See also wxUSE_NO_MANIFEST.}
 @itemdef{wxUSE_WIN_METAFILES_ALWAYS, Use wxMetaFile even when wxUSE_ENH_METAFILE=1.}
 @itemdef{wxUSE_WINRT, Enable WinRT support.}
 @itemdef{wxUSE_WXDIB, Use wxDIB class.}
+@itemdef{wxUSE_WINSOCK2, Include @c <winsock2.h> instead of @c <winsock.h>.
+Turned on automatically if ::wxUSE_IPV6 is on (this option is new since
+wxWidgets 3.1.3).}
 @endDefList
 
 

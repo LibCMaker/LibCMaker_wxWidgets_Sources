@@ -120,29 +120,23 @@ void FormMain::AddTestProperties( wxPropertyGridPage* pg )
 void FormMain::OnDumpList( wxCommandEvent& WXUNUSED(event) )
 {
     wxVariant values = m_pPropGridManager->GetPropertyValues("list", wxNullProperty, wxPG_INC_ATTRIBUTES);
-    wxString text = "This only tests that wxVariant related routines do not crash.";
-    wxString t;
+    wxString text = "This only tests that wxVariant related routines do not crash.\n";
 
     wxDialog* dlg = new wxDialog(this,wxID_ANY,"wxVariant Test",
         wxDefaultPosition,wxDefaultSize,wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER);
 
-    unsigned int i;
-    for ( i = 0; i < (unsigned int)values.GetCount(); i++ )
+    for ( size_t i = 0; i < values.GetCount(); i++ )
     {
+        wxString t;
         wxVariant& v = values[i];
 
         wxString strValue = v.GetString();
 
-#if wxCHECK_VERSION(2,8,0)
         if ( v.GetName().EndsWith("@attr") )
-#else
-        if ( v.GetName().Right(5) == "@attr" )
-#endif
         {
             text += wxString::Format("Attributes:\n");
 
-            unsigned int n;
-            for ( n = 0; n < (unsigned int)v.GetCount(); n++ )
+            for ( size_t n = 0; n < v.GetCount(); n++ )
             {
                 wxVariant& a = v[n];
 
@@ -965,6 +959,67 @@ bool FormMain::RunTests( bool fullTest, bool interactive )
 
         if ( !prop->GetAttribute("Dummy Attribute").IsNull() )
             RT_FAILURE();
+    }
+
+    {
+        RT_START_TEST(Attributes with PGManager)
+
+        const long val = 25;
+        pgman->SetPropertyAttribute("IntProperty", "Dummy Attribute", val);
+        if ( pgman->GetPropertyAttribute("IntProperty", "Dummy Attribute").GetLong() != val )
+            RT_FAILURE();
+
+        pgman->SetPropertyAttribute("IntProperty", "Dummy Attribute", wxVariant());
+        if ( !pgman->GetPropertyAttribute("IntProperty", "Dummy Attribute").IsNull() )
+            RT_FAILURE();
+    }
+
+    {
+        RT_START_TEST(Getting list of attributes)
+
+        wxPGProperty* prop = pgman->GetProperty("Height");
+        const wxPGAttributeStorage& attrs1 = prop->GetAttributes();
+        if ( attrs1.GetCount() < 1 )
+            RT_FAILURE();
+
+        const wxPGAttributeStorage& attrs2 = pgman->GetPropertyAttributes("Height");
+        if ( attrs2.GetCount() != attrs1.GetCount() )
+            RT_FAILURE();
+
+        // Compare both lists
+        wxVariant val1;
+        wxVariant val2;
+        wxPGAttributeStorage::const_iterator it = attrs1.StartIteration();
+        while ( attrs1.GetNext(it, val1) )
+        {
+            val2 = attrs2.FindValue(val1.GetName());
+            if ( val1 != val2 )
+                RT_FAILURE();
+        }
+    }
+
+    {
+        RT_START_TEST(Copying list of attributes)
+
+        wxPGAttributeStorage attrs1(pgman->GetPropertyAttributes("Height"));
+        if ( attrs1.GetCount() < 1 )
+            RT_FAILURE();
+
+        wxPGAttributeStorage attrs2;
+        attrs2 = attrs1;
+        if ( attrs2.GetCount() != attrs1.GetCount() )
+            RT_FAILURE();
+
+        // Compare both lists
+        wxVariant val1;
+        wxVariant val2;
+        wxPGAttributeStorage::const_iterator it = attrs1.StartIteration();
+        while ( attrs1.GetNext(it, val1) )
+        {
+            val2 = attrs2.FindValue(val1.GetName());
+            if ( val1 != val2 )
+                RT_FAILURE();
+        }
     }
 
 #if WXWIN_COMPATIBILITY_3_0

@@ -1493,7 +1493,13 @@ private:
         else
             msg = "Something else";
 
-        event.SetText(msg + " selected");
+        msg += " selected";
+
+        const int filter = dialog->GetCurrentlySelectedFilterIndex();
+        if ( filter != wxNOT_FOUND )
+            msg += wxString::Format(" (filter=%d)", filter);
+
+        event.SetText(msg);
     }
 
     wxString m_str;
@@ -1530,7 +1536,7 @@ MyExtraPanel::MyExtraPanel(wxWindow *parent)
     sizerTop->AddSpacer(5);
     sizerTop->Add(m_btn, wxSizerFlags().Centre().Border());
     sizerTop->AddSpacer(5);
-    sizerTop->Add(m_label, wxSizerFlags().Centre().Border());
+    sizerTop->Add(m_label, wxSizerFlags(1).Centre().Border());
 
     SetSizerAndFit(sizerTop);
 }
@@ -1549,11 +1555,12 @@ void MyFrame::FileOpen(wxCommandEvent& WXUNUSED(event) )
                     "Testing open file dialog",
                     wxEmptyString,
                     wxEmptyString,
-#ifdef __WXMOTIF__
-                    "C++ files (*.cpp)|*.cpp"
-#else
-                    "C++ files (*.cpp;*.h)|*.cpp;*.h"
-#endif
+                    wxString::Format
+                    (
+                        "All files (%s)|%s|C++ files (*.cpp;*.h)|*.cpp;*.h",
+                        wxFileSelectorDefaultWildcardStr,
+                        wxFileSelectorDefaultWildcardStr
+                    )
                  );
 
     dialog.SetExtraControlCreator(&createMyExtraPanel);
@@ -3444,7 +3451,7 @@ wxPanel* SettingsDialog::CreateGeneralSettingsPage(wxWindow* parent)
 
 #if wxUSE_SPINCTRL
     wxSpinCtrl* spinCtrl12 = new wxSpinCtrl(panel, ID_AUTO_SAVE_MINS, wxEmptyString,
-        wxDefaultPosition, wxSize(40, wxDefaultCoord), wxSP_ARROW_KEYS, 1, 60, 1);
+        wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 1, 60, 1);
     spinCtrl12->SetValidator(wxGenericValidator(&m_settingsData.m_autoSaveInterval));
 #endif
 
@@ -3515,8 +3522,7 @@ wxPanel* SettingsDialog::CreateAestheticSettingsPage(wxWindow* parent)
     wxStaticBox* staticBox1 = new wxStaticBox(panel, wxID_ANY, "Tile font size:");
     wxBoxSizer* itemSizer5 = new wxStaticBoxSizer( staticBox1, wxHORIZONTAL );
 
-    wxSpinCtrl* spinCtrl = new wxSpinCtrl(panel, ID_FONT_SIZE, wxEmptyString, wxDefaultPosition,
-        wxSize(80, wxDefaultCoord));
+    wxSpinCtrl* spinCtrl = new wxSpinCtrl(panel, ID_FONT_SIZE, wxEmptyString);
     spinCtrl->SetValidator(wxGenericValidator(&m_settingsData.m_titleFontSize));
     itemSizer5->Add(spinCtrl, 0, wxALL|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL, 5);
 

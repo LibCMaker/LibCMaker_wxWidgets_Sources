@@ -1429,7 +1429,7 @@ void FormMain::PopulateWithExamples ()
 
     pg->Append( new wxMultiChoiceProperty( "MultiChoiceProperty", wxPG_LABEL,
                                            tchoices, tchoicesValues ) );
-    pg->SetPropertyAttribute( "MultiChoiceProperty", wxPG_ATTR_MULTICHOICE_USERSTRINGMODE, true );
+    pg->SetPropertyAttribute("MultiChoiceProperty", wxPG_ATTR_MULTICHOICE_USERSTRINGMODE, 1);
 
     pg->Append( new wxSizeProperty( "SizeProperty", "Size", GetSize() ) );
     pg->Append( new wxPointProperty( "PointProperty", "Position", GetPosition() ) );
@@ -1581,7 +1581,7 @@ void FormMain::PopulateWithExamples ()
 
     pid->AppendChild( new wxStringProperty("Latest Release",
                                            wxPG_LABEL,
-                                           "3.0.2"));
+                                           "3.1.2"));
     pid->AppendChild( new wxBoolProperty("Win API",
                                          wxPG_LABEL,
                                          true) );
@@ -1590,10 +1590,9 @@ void FormMain::PopulateWithExamples ()
 
     pg->AppendIn(pid, new wxBoolProperty("QT", wxPG_LABEL, true) );
     pg->AppendIn(pid, new wxBoolProperty("Cocoa", wxPG_LABEL, true) );
-    pg->AppendIn(pid, new wxBoolProperty("BeOS", wxPG_LABEL, false) );
-    pg->AppendIn(pid, new wxStringProperty("Trunk Version", wxPG_LABEL, "3.1.0") );
+    pg->AppendIn(pid, new wxBoolProperty("Haiku", wxPG_LABEL, false) );
+    pg->AppendIn(pid, new wxStringProperty("Trunk Version", wxPG_LABEL, wxVERSION_NUM_DOT_STRING));
     pg->AppendIn(pid, new wxBoolProperty("GTK+", wxPG_LABEL, true) );
-    pg->AppendIn(pid, new wxBoolProperty("Sky OS", wxPG_LABEL, false) );
     pg->AppendIn(pid, new wxBoolProperty("Android", wxPG_LABEL, false) );
 
     AddTestProperties(pg);
@@ -1959,6 +1958,13 @@ void FormMain::CreateGrid( int style, int extraStyle )
 
     PopulateGrid();
 
+    m_propGrid->MakeColumnEditable(0, m_labelEditingEnabled);
+    m_pPropGridManager->ShowHeader(m_hasHeader);
+    if ( m_hasHeader )
+    {
+        m_pPropGridManager->SetColumnTitle(2, "Units");
+    }
+
     // Change some attributes in all properties
     //pgman->SetPropertyAttributeAll(wxPG_BOOL_USE_DOUBLE_CLICK_CYCLING,true);
 
@@ -1981,6 +1987,8 @@ FormMain::FormMain(const wxString& title, const wxPoint& pos, const wxSize& size
 
     m_propGrid = NULL;
     m_panel = NULL;
+    m_hasHeader = false;
+    m_labelEditingEnabled = false;
 
 #ifdef __WXMAC__
     // we need this in order to allow the about menu relocation, since ABOUT is
@@ -2103,10 +2111,12 @@ FormMain::FormMain(const wxString& title, const wxPoint& pos, const wxSize& size
         "Select window style flags used by the grid.");
     menuTry->AppendCheckItem(ID_ENABLELABELEDITING, "Enable label editing",
         "This calls wxPropertyGrid::MakeColumnEditable(0)");
+    menuTry->Check(ID_ENABLELABELEDITING, m_labelEditingEnabled);
 #if wxUSE_HEADERCTRL
     menuTry->AppendCheckItem(ID_SHOWHEADER,
         "Enable header",
         "This calls wxPropertyGridManager::ShowHeader()");
+    menuTry->Check(ID_SHOWHEADER, m_hasHeader);
 #endif // wxUSE_HEADERCTRL
     menuTry->AppendSeparator();
     menuTry->AppendRadioItem( ID_COLOURSCHEME1, "Standard Colour Scheme" );
@@ -2575,8 +2585,8 @@ FormMain::OnSetBackgroundColour( wxCommandEvent& event )
 
     if ( col.IsOk() )
     {
-        bool recursively = (event.GetId()==ID_SETBGCOLOURRECUR) ? true : false;
-        pg->SetPropertyBackgroundColour(prop, col, recursively);
+        int flags = (event.GetId()==ID_SETBGCOLOURRECUR) ? wxPG_RECURSE : 0;
+        pg->SetPropertyBackgroundColour(prop, col, flags);
     }
 }
 
@@ -2693,7 +2703,8 @@ void FormMain::OnFreezeClick( wxCommandEvent& event )
 
 void FormMain::OnEnableLabelEditing(wxCommandEvent& event)
 {
-    m_propGrid->MakeColumnEditable(0, event.IsChecked());
+    m_labelEditingEnabled = event.IsChecked();
+    m_propGrid->MakeColumnEditable(0, m_labelEditingEnabled);
 }
 
 // -----------------------------------------------------------------------
@@ -2701,9 +2712,9 @@ void FormMain::OnEnableLabelEditing(wxCommandEvent& event)
 #if wxUSE_HEADERCTRL
 void FormMain::OnShowHeader( wxCommandEvent& event )
 {
-    bool show = event.IsChecked();
-    m_pPropGridManager->ShowHeader(show);
-    if ( show )
+    m_hasHeader = event.IsChecked();
+    m_pPropGridManager->ShowHeader(m_hasHeader);
+    if ( m_hasHeader )
     {
         m_pPropGridManager->SetColumnTitle(2, "Units");
     }
