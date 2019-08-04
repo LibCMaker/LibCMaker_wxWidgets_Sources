@@ -53,6 +53,9 @@
     // GetHwndOf()
     #include "wx/msw/private.h"
 #endif
+#ifdef __WXGTK20__
+    #include <gdk/gdk.h>
+#endif
 
 //----------------------------------------------------------------------
 // Helper classes
@@ -290,6 +293,9 @@ void ScintillaWX::Initialise() {
     kmap.AssignCmdKey(SCK_UP, SCI_CTRL, SCI_DOCUMENTSTART);
     kmap.AssignCmdKey(SCK_DOWN, SCI_CTRL, SCI_DOCUMENTEND);
 #endif // __WXMAC__
+
+    static_cast<ListBoxImpl*>(ac.lb)->SetListInfo(&listType, &(ac.posStart),
+                                                  &(ac.startLen));
 }
 
 
@@ -392,7 +398,7 @@ bool ScintillaWX::ModifyScrollBars(int nMax, int nPage) {
 
     int vertEnd = nMax+1;
     if (!verticalScrollBarVisible)
-        vertEnd = 0;
+        nPage = vertEnd + 1;
 
     // Check the vertical scrollbar
     if (stc->m_vScrollBar == NULL) {  // Use built-in scrollbar
@@ -420,15 +426,15 @@ bool ScintillaWX::ModifyScrollBars(int nMax, int nPage) {
     int horizEnd = scrollWidth;
     if (horizEnd < 0)
         horizEnd = 0;
+    int pageWidth = static_cast<int>(rcText.Width());
     if (!horizontalScrollBarVisible || Wrapping())
-        horizEnd = 0;
-    int pageWidth = wxRound(rcText.Width());
+        pageWidth = horizEnd + 1;
 
     if (stc->m_hScrollBar == NULL) {  // Use built-in scrollbar
         int sbMax    = stc->GetScrollRange(wxHORIZONTAL);
         int sbThumb  = stc->GetScrollThumb(wxHORIZONTAL);
         int sbPos    = stc->GetScrollPos(wxHORIZONTAL);
-        if ((sbMax != horizEnd) || (sbThumb != pageWidth) || (sbPos != 0)) {
+        if ((sbMax != horizEnd) || (sbThumb != pageWidth)) {
             stc->SetScrollbar(wxHORIZONTAL, sbPos, pageWidth, horizEnd);
             modified = true;
             if (scrollWidth < pageWidth) {
@@ -440,7 +446,7 @@ bool ScintillaWX::ModifyScrollBars(int nMax, int nPage) {
         int sbMax    = stc->m_hScrollBar->GetRange();
         int sbThumb  = stc->m_hScrollBar->GetPageSize();
         int sbPos    = stc->m_hScrollBar->GetThumbPosition();
-        if ((sbMax != horizEnd) || (sbThumb != pageWidth) || (sbPos != 0)) {
+        if ((sbMax != horizEnd) || (sbThumb != pageWidth)) {
             stc->m_hScrollBar->SetScrollbar(sbPos, pageWidth, horizEnd, pageWidth);
             modified = true;
             if (scrollWidth < pageWidth) {
@@ -1094,13 +1100,6 @@ void ScintillaWX::DoAddChar(int key) {
 int  ScintillaWX::DoKeyDown(const wxKeyEvent& evt, bool* consumed)
 {
     int key = evt.GetKeyCode();
-    if (key == WXK_NONE) {
-        // This is a Unicode character not representable in Latin-1 or some key
-        // without key code at all (e.g. dead key or VK_PROCESSKEY under MSW).
-        if ( consumed )
-            *consumed = false;
-        return 0;
-    }
 
     if (evt.RawControlDown() && key >= 1 && key <= 26 && key != WXK_BACK)
         key += 'A' - 1;
@@ -1141,6 +1140,52 @@ int  ScintillaWX::DoKeyDown(const wxKeyEvent& evt, bool* consumed)
     case WXK_ALT:               key = 0; break;
     case WXK_SHIFT:             key = 0; break;
     case WXK_MENU:              key = SCK_MENU; break;
+    case WXK_NONE:
+#ifdef __WXGTK20__
+        if (evt.RawControlDown())
+        {
+            // To allow Ctrl-key shortcuts to work with non-Latin keyboard layouts,
+            // look for any available layout that would produce an ASCII letter for
+            // the given hardware keycode
+            const unsigned keycode = evt.GetRawKeyFlags();
+            GdkKeymap* keymap = gdk_keymap_get_for_display(gdk_display_get_default());
+            GdkKeymapKey keymapKey = { keycode, 0, 1 };
+            do {
+                const unsigned keyval = gdk_keymap_lookup_key(keymap, &keymapKey);
+                if (keyval >= 'A' && keyval <= 'Z')
+                {
+                    key = keyval;
+                    break;
+                }
+                keymapKey.group++;
+            } while (keymapKey.group < 4);
+            if (key == WXK_NONE)
+            {
+                // There may be no keyboard layouts with Latin keys available,
+                // fall back to a hard-coded mapping for the common pc105
+                static const char keycodeToKeyval[] = {
+                      0,   0,   0,   0,   0,   0,   0,   0,
+                      0,   0,   0,   0,   0,   0,   0,   0,
+                      0,   0,   0,   0,   0,   0,   0,   0,
+                    'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I',
+                    'O', 'P',   0,   0,   0,   0, 'A', 'S',
+                    'D', 'F', 'G', 'H', 'J', 'K', 'L',   0,
+                      0,   0,   0,   0, 'Z', 'X', 'C', 'V',
+                    'B', 'N', 'M'
+                };
+                if (keycode < sizeof(keycodeToKeyval))
+                    key = keycodeToKeyval[keycode];
+            }
+        }
+        if (key == WXK_NONE)
+#endif
+        {
+            // This is a Unicode character not representable in Latin-1 or some key
+            // without key code at all (e.g. dead key or VK_PROCESSKEY under MSW).
+            if (consumed)
+                *consumed = false;
+            return 0;
+        }
     }
 
     int rv = KeyDownWithModifiers
@@ -1355,24 +1400,6 @@ void ScintillaWX::DoMarkerDefineBitmap(int markerNumber, const wxBitmap& bmp) {
 
 void ScintillaWX::DoRegisterImage(int type, const wxBitmap& bmp) {
     static_cast<ListBoxImpl*>(ac.lb)->RegisterImageHelper(type, bmp);
-}
-
-void ScintillaWX::SetListBoxColours(const wxColour& background,
-                                          const wxColour& text,
-                                          const wxColour& highlight,
-                                          const wxColour& highlightText)
-{
-    static_cast<ListBoxImpl*>(ac.lb)->SetColours(background, text,
-                                                  highlight, highlightText);
-}
-
-void ScintillaWX::UseListCtrlStyleForLists(bool useListCtrl,
-                                           const wxColour& currentBgColour,
-                                           const wxColour& currentTextColour)
-{
-    static_cast<ListBoxImpl*>(ac.lb)->UseListCtrlStyle(useListCtrl,
-                                                       currentBgColour,
-                                                       currentTextColour);
 }
 
 sptr_t ScintillaWX::DirectFunction(

@@ -54,11 +54,15 @@ struct wxPGPaintData
 */
 #define wxPG_ATTR_DEFAULT_VALUE           wxS("DefaultValue")
 
-/** Universal, @c int or @c double. Minimum value for numeric properties.
+/** Built-in attribute specific to wxNumericProperty and derived properties,
+    like wxIntProperty, wxUIntProperty, wxFloatProperty, @c int or @c double.
+    Minimum value for the property.
 */
 #define wxPG_ATTR_MIN                     wxS("Min")
 
-/** Universal, @c int or @c double. Maximum value for numeric properties.
+/** Built-in attribute specific to wxNumericProperty and derived properties,
+    like wxIntProperty, wxUIntProperty, wxFloatProperty, @c int or @c double.
+    Maximum value for the property.
 */
 #define wxPG_ATTR_MAX                     wxS("Max")
 
@@ -125,34 +129,37 @@ struct wxPGPaintData
 */
 #define wxPG_UINT_PREFIX                    wxS("Prefix")
 
-/** wxFileProperty/wxImageFileProperty specific, @c wxChar*, default is detected/varies.
-    Sets the wildcard used in the triggered wxFileDialog. Format is the
-    same.
+/** wxFileProperty and wxImageFileProperty specific built-in attribute,
+    @c wxChar*, default is detected/varies. Sets the wildcard used in
+    the triggered wxFileDialog. Format is the same.
 */
 #define wxPG_FILE_WILDCARD                  wxS("Wildcard")
 
-/** wxFileProperty and wxImageFileProperty specific, @c int, default 1.
-    When 0, only the file name is shown (i.e. drive and directory are hidden).
+/** wxFileProperty and wxImageFileProperty specific built-in attribute, @c bool,
+    default @true. When @false, only the file name is shown (i.e. drive and
+    directory are hidden).
 */
 #define wxPG_FILE_SHOW_FULL_PATH            wxS("ShowFullPath")
 
-/** Specific to wxFileProperty and derived properties, wxString, default empty.
-    If set, then the filename is shown relative to the given path string.
+/** Built-in attribute specific to wxFileProperty and derived properties,
+    wxString, default empty. If set, then the filename is shown relative
+    to the given path string.
 */
 #define wxPG_FILE_SHOW_RELATIVE_PATH        wxS("ShowRelativePath")
 
-/** Specific to wxFileProperty and derived properties, wxString, default is empty.
-    Sets the initial path of where to look for files.
+/** Built-in attribute specific to wxFileProperty and derived properties,
+    wxString, default is empty. Sets the initial path of where to look for files.
 */
 #define wxPG_FILE_INITIAL_PATH              wxS("InitialPath")
 
-/** Specific to wxFileProperty and derivatives, wxString, default is empty.
-    Sets a specific title for the dir dialog.
+/** Built-in attribute specific to wxFileProperty and derivatives, wxString,
+    default is empty. Sets a specific title for the dir dialog.
 */
 #define wxPG_FILE_DIALOG_TITLE              wxS("DialogTitle")
 
-/** Specific to wxFileProperty and derivatives, @c long, default is 0.
-    Sets a specific wxFileDialog style for the file dialog, e.g. ::wxFD_SAVE.
+/** Built-in attribute specific to wxFileProperty and derivatives, @c long,
+    default is 0. Sets a specific wxFileDialog style for the file dialog,
+    e.g. ::wxFD_SAVE.
 
     @since 2.9.4
 */
@@ -183,17 +190,23 @@ struct wxPGPaintData
 */
 #define wxPG_DATE_PICKER_STYLE              wxS("PickerStyle")
 
-/** SpinCtrl editor, @c int or @c double. How much number changes when button
-    is pressed (or up/down on keyboard).
+/** Built-in attribute specific to wxNumericProperty and derived properties,
+    like wxIntProperty, wxUIntProperty, wxFloatProperty, used by SpinCtrl editor,
+    @c int or @c double type. How much number changes when button is pressed
+    (or up/down on keyboard).
 */
 #define wxPG_ATTR_SPINCTRL_STEP             wxS("Step")
 
-/** SpinCtrl editor, @c bool. If @true, value wraps at Min/Max.
+/** Built-in attribute specific to wxNumericProperty and derived properties,
+    like wxIntProperty, wxUIntProperty, wxFloatProperty, used by SpinCtrl editor,
+    @c bool. If @true, value wraps at Min/Max.
 */
 #define wxPG_ATTR_SPINCTRL_WRAP             wxS("Wrap")
 
-/** SpinCtrl editor, @c bool. If @true, value can also by changed by moving
-    mouse when left mouse button is being pressed.
+/** Built-in attribute specific to wxNumericProperty and derived properties,
+    like wxIntProperty, wxUIntProperty, wxFloatProperty, used by SpinCtrl editor,
+    @c bool. If @true, value can also by changed by moving mouse when left
+    mouse button is being pressed.
 */
 #define wxPG_ATTR_SPINCTRL_MOTION           wxS("MotionSpin")
 
@@ -203,9 +216,9 @@ struct wxPGPaintData
 */
 #define wxPG_ATTR_MULTICHOICE_USERSTRINGMODE    wxS("UserStringMode")
 
-/** Built-in attribute of wxColourProperty and its kind, type of @c int,
-    default value is 1. Setting this attribute to 0 hides custom colour
-    from property's list of choices.
+/** Built-in attribute of wxColourProperty and its kind, type of @c bool,
+    default value is @true. Setting this attribute to @false hides custom
+    colour from property's list of choices.
 */
 #define wxPG_COLOUR_ALLOW_CUSTOM            wxS("AllowCustom")
 
@@ -398,8 +411,9 @@ wxPG_PROP_CLASS_SPECIFIC_3          = 0x00400000
 /**
     @class wxPGProperty
 
-    wxPGProperty is base class for all wxPropertyGrid properties. In
-    sections below we cover few related topics.
+    wxPGProperty is base class for all wxPropertyGrid properties and as such
+    it is not intended to be instantiated directly.
+    In sections below we cover few related topics.
 
     @li @ref pgproperty_properties
     @li @ref pgproperty_creating
@@ -457,7 +471,7 @@ wxPG_PROP_CLASS_SPECIFIC_3          = 0x00400000
 
     @subsection wxIntProperty
 
-    Like wxStringProperty, but converts text to a signed long integer.
+    It derives from wxNumericProperty and displays value as a signed long integer.
     wxIntProperty seamlessly supports 64-bit integers (i.e. wxLongLong) on overlfow.
     To safely convert variant to integer, use code like this:
 
@@ -494,6 +508,9 @@ wxPG_PROP_CLASS_SPECIFIC_3          = 0x00400000
 
     Supported special attributes:
     - ::wxPG_ATTR_MIN, ::wxPG_ATTR_MAX to specify acceptable value range.
+    - ::wxPG_ATTR_SPINCTRL_STEP, ::wxPG_ATTR_SPINCTRL_WRAP,
+    ::wxPG_ATTR_SPINCTRL_MOTION: Sets SpinCtrl editor parameters.
+    @see @ref propgrid_property_attributes
 
     @subsection wxUIntProperty
 
@@ -513,6 +530,8 @@ wxPG_PROP_CLASS_SPECIFIC_3          = 0x00400000
     - ::wxPG_UINT_PREFIX: Defines displayed prefix. Possible values are
     ::wxPG_PREFIX_NONE, ::wxPG_PREFIX_0x and ::wxPG_PREFIX_DOLLAR_SIGN.
     Only ::wxPG_PREFIX_NONE works with decimal and octal numbers.
+    - ::wxPG_ATTR_SPINCTRL_STEP, ::wxPG_ATTR_SPINCTRL_WRAP,
+    ::wxPG_ATTR_SPINCTRL_MOTION: Sets SpinCtrl editor parameters.
     @see @ref propgrid_property_attributes
 
     @remarks
@@ -536,6 +555,8 @@ wxPG_PROP_CLASS_SPECIFIC_3          = 0x00400000
     - ::wxPG_FLOAT_PRECISION: Sets the (max) precision used when floating point
     value is rendered as text. The default -1 means shortest floating-point
     6-digit representation.
+    - ::wxPG_ATTR_SPINCTRL_STEP, ::wxPG_ATTR_SPINCTRL_WRAP,
+    ::wxPG_ATTR_SPINCTRL_MOTION: Sets SpinCtrl editor parameters.
     @see @ref propgrid_property_attributes
 
     @subsection wxBoolProperty
@@ -617,6 +638,7 @@ wxPG_PROP_CLASS_SPECIFIC_3          = 0x00400000
     given path string.
     - ::wxPG_FILE_INITIAL_PATH: Sets the initial path of where to look for files.
     - ::wxPG_FILE_DIALOG_TITLE: Sets a specific title for the dir dialog.
+    - ::wxPG_FILE_DIALOG_STYLE: Sets a specific wxFileDialog style for the file dialog.
     @see @ref propgrid_property_attributes
 
     @subsection wxEnumProperty
@@ -845,37 +867,6 @@ public:
     typedef wxUint32 FlagType;
 
     /**
-        Default constructor.
-    */
-    wxPGProperty();
-
-    /**
-        Constructor.
-        Non-abstract property classes should have constructor of this style:
-
-        @code
-
-        MyProperty( const wxString& label, const wxString& name, const T& value )
-            : wxPGProperty(label, name)
-        {
-            // Generally recommended way to set the initial value
-            // (as it should work in pretty much 100% of cases).
-            wxVariant variant;
-            variant << value;
-            SetValue(variant);
-
-            // If has private child properties then create them here.
-            // For example:
-            //     AddPrivateChild( new wxStringProperty("Subprop 1",
-            //                                           wxPG_LABEL,
-            //                                           value.GetSubProp1()));
-        }
-
-        @endcode
-    */
-    wxPGProperty( const wxString& label, const wxString& name );
-
-    /**
         Virtual destructor. It is customary for derived properties to implement this.
     */
     virtual ~wxPGProperty();
@@ -919,9 +910,9 @@ public:
             Text to be translated into variant.
 
         @param argFlags
-            If wxPG_FULL_VALUE is set, returns complete, storable value instead
+            If ::wxPG_FULL_VALUE is set, returns complete, storable value instead
             of displayable one (they may be different).
-            If wxPG_COMPOSITE_FRAGMENT is set, text is interpreted as a part of
+            If ::wxPG_COMPOSITE_FRAGMENT is set, text is interpreted as a part of
             composite property string value (as generated by ValueToString()
             called with this same flag).
 
@@ -946,7 +937,7 @@ public:
         @param number
             Integer to be translated into variant.
         @param argFlags
-            If wxPG_FULL_VALUE is set, returns complete, storable value instead
+            If ::wxPG_FULL_VALUE is set, returns complete, storable value instead
             of displayable one.
 
         @return Returns @true if resulting wxVariant value was different.
@@ -971,10 +962,10 @@ public:
             Value to be converted.
         @param argFlags
             If 0 (default value), then displayed string is returned.
-            If wxPG_FULL_VALUE is set, returns complete, storable string value
-            instead of displayable. If wxPG_EDITABLE_VALUE is set, returns
+            If ::wxPG_FULL_VALUE is set, returns complete, storable string value
+            instead of displayable. If ::wxPG_EDITABLE_VALUE is set, returns
             string value that must be editable in textctrl.
-            If wxPG_COMPOSITE_FRAGMENT is set, returns text that is appropriate to
+            If ::wxPG_COMPOSITE_FRAGMENT is set, returns text that is appropriate to
             display as a part of string property's composite text representation.
 
         @remarks Default implementation calls GenerateComposedValue().
@@ -988,12 +979,12 @@ public:
         @param text
             String to get the value from.
         @param flags
-            If @c wxPG_FULL_VALUE is set, the function sets complete, storable
+            If ::wxPG_FULL_VALUE is set, the function sets complete, storable
             value instead of displayable one (they may be different).
-            @c wxPG_PROGRAMMATIC_VALUE flag is used to indicate that value is
+            ::wxPG_PROGRAMMATIC_VALUE flag is used to indicate that value is
             being set programmatically (i.e. operation is not caused by user
             input).
-            If @c wxPG_REPORT_ERROR is set, a special action should be
+            If ::wxPG_REPORT_ERROR is set, a special action should be
             performed if string couldn't have been successfully converted
             to the valid value (e.g. a special value can be set in this case).
 
@@ -1008,7 +999,7 @@ public:
         @param value
             Int to get the value from.
         @param flags
-            If has wxPG_FULL_VALUE, then the value given is a actual value and not an index.
+            If has ::wxPG_FULL_VALUE, then the value given is a actual value and not an index.
 
         @return @true if value was changed.
     */
@@ -1025,7 +1016,7 @@ public:
         @remarks
         - Default behaviour is to return wxSize(0,0), which means no image.
         - Default image width or height is indicated with dimension -1.
-        - You can also return wxPG_DEFAULT_IMAGE_SIZE which equals wxDefaultSize.
+        - You can also return ::wxPG_DEFAULT_IMAGE_SIZE which equals wxDefaultSize.
     */
     virtual wxSize OnMeasureImage( int item = -1 ) const;
 
@@ -1157,7 +1148,7 @@ public:
         than row height).
 
         NOTE: Following applies when OnMeasureImage() returns a "flexible" height (
-        using wxPG_FLEXIBLE_SIZE(W,H) macro), which implies variable height items:
+        using @c wxPG_FLEXIBLE_SIZE(W,H) macro), which implies variable height items:
         If (rect.x+rect.width) is < 0, then this is a measure item call, which
         means that dc is invalid and only thing that should be done is to set
         paintdata.m_drawnHeight to the height of the image of item at index
@@ -1291,7 +1282,7 @@ public:
         Adds a private child property. If you use this instead of
         wxPropertyGridInterface::Insert() or
         wxPropertyGridInterface::AppendIn(), then property's parental
-        type will automatically be set up to wxPG_PROP_AGGREGATE. In other
+        type will automatically be set up to ::wxPG_PROP_AGGREGATE. In other
         words, all properties of this property will become private.
     */
     void AddPrivateChild( wxPGProperty* prop );
@@ -1336,7 +1327,8 @@ public:
         @remarks Setting a property flag never has any side-effect, and is
                  intended almost exclusively for internal use. So, for
                  example, if you want to disable a property, call
-                 Enable(false) instead of setting wxPG_PROP_DISABLED flag.
+                 @code Enable(false) @endcode instead of setting
+                 ::wxPG_PROP_DISABLED flag.
 
         @see HasFlag(), GetFlags()
     */
@@ -1421,7 +1413,7 @@ public:
         Returns map-like storage of property's attributes.
 
         @remarks
-        If extra style wxPG_EX_WRITEONLY_BUILTIN_ATTRIBUTES is set,
+        If extra style ::wxPG_EX_WRITEONLY_BUILTIN_ATTRIBUTES is set,
         then builtin-attributes are not included in the storage.
     */
     const wxPGAttributeStorage& GetAttributes() const;
@@ -1573,7 +1565,14 @@ public:
     */
     wxPGProperty* GetMainParent() const;
 
-    /** Returns maximum allowed length of property's text value.
+    /**
+        Returns maximum allowed length of the text the user can enter in
+        the property text editor.
+
+        @remarks
+        0 is returned if length is not explicitly limited and the text can be
+        as long as it is supported by the underlying native text control
+        widget.
     */
     int GetMaxLength() const;
 
@@ -1585,6 +1584,9 @@ public:
 
     /**
         Returns (direct) child property with given name (or @NULL if not found).
+
+        @param name
+            Name of the child property to look for.
     */
     wxPGProperty* GetPropertyByName( const wxString& name ) const;
 
@@ -1606,10 +1608,10 @@ public:
 
         @param argFlags
             If 0 (default value), then displayed string is returned.
-            If wxPG_FULL_VALUE is set, returns complete, storable string value
-            instead of displayable. If wxPG_EDITABLE_VALUE is set, returns
+            If ::wxPG_FULL_VALUE is set, returns complete, storable string value
+            instead of displayable. If ::wxPG_EDITABLE_VALUE is set, returns
             string value that must be editable in textctrl. If
-            wxPG_COMPOSITE_FRAGMENT is set, returns text that is appropriate to
+            ::wxPG_COMPOSITE_FRAGMENT is set, returns text that is appropriate to
             display as a part of string property's composite text
             representation.
 
@@ -1677,7 +1679,8 @@ public:
             @true for hide, @false for reveal.
 
         @param flags
-            By default changes are applied recursively. Set this parameter wxPG_DONT_RECURSE to prevent this.
+            By default changes are applied recursively. Set this parameter to
+            ::wxPG_DONT_RECURSE to prevent this.
     */
     bool Hide( bool hide, int flags = wxPG_RECURSE );
 
@@ -1748,7 +1751,7 @@ public:
     bool IsSomeParent( wxPGProperty* candidateParent ) const;
 
     /**
-        Returns true if property has editable wxTextCtrl when selected.
+        Returns @true if property has editable wxTextCtrl when selected.
 
         @remarks Although disabled properties do not displayed editor, they still
                 return @true here as being disabled is considered a temporary
@@ -1763,12 +1766,12 @@ public:
     bool IsValueUnspecified() const;
 
     /**
-        Returns true if all parents expanded.
+        Returns @true if all parents expanded.
     */
     bool IsVisible() const;
 
     /**
-        Returns child property at index i.
+        Returns child property at index @a i.
     */
     wxPGProperty* Item( unsigned int i ) const;
 
@@ -1779,7 +1782,7 @@ public:
 
     /**
         If property's editor is created this forces its recreation.
-        Useful in SetAttribute etc. Returns true if actually did anything.
+        Useful in SetAttribute etc. Returns @true if actually did anything.
     */
     bool RecreateEditor();
 
@@ -1823,7 +1826,7 @@ public:
             Background colour to use.
 
         @param flags
-            Default is wxPG_RECURSE which causes colour to be set recursively.
+            Default is ::wxPG_RECURSE which causes colour to be set recursively.
             Omit this flag to only set colour for the property in question
             and not any of its children.
 
@@ -1928,7 +1931,12 @@ public:
     void SetLabel( const wxString& label );
 
     /**
-        Set max length of text in text editor.
+        Set maximum length of the text the user can enter in the text editor.
+        If it is 0, the length is not limited and the text can be as long as
+        it is supported by the underlying native text control widget.
+
+        @return
+        Returns @true if maximum length was set.
     */
     bool SetMaxLength( int maxLen );
 
@@ -1946,9 +1954,9 @@ public:
         Changes what sort of parent this property is for its children.
 
         @param flag
-            Use one of the following values: wxPG_PROP_MISC_PARENT (for generic
-            parents), wxPG_PROP_CATEGORY (for categories), or
-            wxPG_PROP_AGGREGATE (for derived property classes with private
+            Use one of the following values: ::wxPG_PROP_MISC_PARENT (for generic
+            parents), ::wxPG_PROP_CATEGORY (for categories), or
+            ::wxPG_PROP_AGGREGATE (for derived property classes with private
             children).
 
         @remarks You generally do not need to call this function.
@@ -1962,7 +1970,7 @@ public:
             Text colour to use.
 
         @param flags
-            Default is wxPG_RECURSE which causes colour to be set recursively.
+            Default is ::wxPG_RECURSE which causes colour to be set recursively.
             Omit this flag to only set colour for the property in question
             and not any of its children.
 
@@ -1977,7 +1985,7 @@ public:
         Sets property's default text and background colours.
 
         @param flags
-            Default is wxPG_RECURSE which causes colours to be set recursively.
+            Default is ::wxPG_RECURSE which causes colours to be set recursively.
             Omit this flag to only set colours for the property in question
             and not any of its children.
 
@@ -2007,7 +2015,7 @@ public:
             Pointer to list variant that contains child values. Used to indicate
             which children should be marked as modified. Usually you just use @NULL.
         @param flags
-            wxPG_SETVAL_REFRESH_EDITOR is set by default, to refresh editor
+            ::wxPG_SETVAL_REFRESH_EDITOR is set by default, to refresh editor
             and redraw properties.
     */
     void SetValue( wxVariant value, wxVariant* pList = NULL,
@@ -2049,7 +2057,7 @@ public:
     wxPGProperty* UpdateParentValues();
 
     /**
-        Returns @true if containing grid uses wxPG_EX_AUTO_UNSPECIFIED_VALUES.
+        Returns @true if containing grid uses ::wxPG_EX_AUTO_UNSPECIFIED_VALUES.
     */
     bool UsesAutoUnspecified() const;
 
@@ -2059,6 +2067,40 @@ public:
     void*                       m_clientData;
 
 protected:
+
+    /**
+        Default constructor. It is protected because wxPGProperty is only
+        a base class for other property classes.
+    */
+    wxPGProperty();
+
+    /**
+        Constructor. It is protected because wxPGProperty is only a base
+        class for other property classes.
+        Non-abstract property classes should have constructor of this style:
+
+        @code
+
+        MyProperty( const wxString& label, const wxString& name, const T& value )
+            : wxPGProperty(label, name)
+        {
+            // Generally recommended way to set the initial value
+            // (as it should work in pretty much 100% of cases).
+            wxVariant variant;
+            variant << value;
+            SetValue(variant);
+
+            // If has private child properties then create them here.
+            // For example:
+            //     AddPrivateChild( new wxStringProperty("Subprop 1",
+            //                                           wxPG_LABEL,
+            //                                           value.GetSubProp1()));
+        }
+
+        @endcode
+    */
+    wxPGProperty( const wxString& label, const wxString& name );
+
     /**
         Sets property cell in fashion that reduces number of exclusive
         copies of cell data. Used when setting, for instance, same
@@ -2100,6 +2142,9 @@ protected:
     /**
         Clear cells associated with property.
 
+        @param ignoreWithFlags
+            Cells will not be cleared for properties having these flags set. 
+
         @param recursively
             If @true, apply this operation recursively in child properties.
     */
@@ -2113,11 +2158,14 @@ protected:
     /** Returns (direct) child property with given name (or @NULL if not found),
         with hint index.
 
+        @param name
+            Name of the child property to look for.
+
         @param hintIndex
-        Start looking for the child at this index.
+            Start looking for the child at this index.
 
         @remarks
-        Does not support scope (i.e. Parent.Child notation).
+            Does not support scope (i.e. Parent.Child notation).
     */
     wxPGProperty* GetPropertyByNameWH( const wxString& name,
                                        unsigned int hintIndex ) const;
@@ -2131,7 +2179,7 @@ protected:
     void Empty();
 
     /**
-        Returns true if child property is selected.
+        Returns @true if child property is selected.
     */
     bool IsChildSelected( bool recursive = false ) const;
 };
@@ -2203,6 +2251,24 @@ public:
         Returns @true if rendered something in the foreground (text or
         bitmap).
 
+        @param dc
+            wxDC to paint on.
+
+        @param rect
+            Box reserved for drawing.
+
+        @param propertyGrid
+            Property grid in which property is displayed.
+
+        @param property
+            Property to be rendered.
+
+        @param column
+            Property cell column.
+
+        @param item
+            Index of chosen item if combo popup is drawn, -1 otherwise.
+
         @param flags
             See @ref pgcellrenderer_render_flags "list of render flags".
     */
@@ -2245,14 +2311,25 @@ public:
                           wxPGProperty* property,
                           const wxPGEditor* editor ) const;
 
-    /** Utility to render cell bitmap and set text colour plus bg brush
+    /**
+        Utility to render cell bitmap and set text colour plus bg brush
         colour.
+
+        @param dc
+            wxDC to paint on.
+
+        @param rect
+            Box reserved for drawing.
+
+        @param cell
+            Cell information.
 
         @param flags
             See @ref pgcellrenderer_render_flags "list of render flags".
 
-        @return Returns image width, which, for instance, can be passed to
-                DrawText.
+        @return
+            Returns image width, which, for instance, can be passed to
+            DrawText().
     */
     int PreDrawCell( wxDC& dc,
                      const wxRect& rect,
@@ -2262,6 +2339,15 @@ public:
     /**
         Utility to be called after drawing is done, to revert whatever
         changes PreDrawCell() did.
+
+        @param dc
+            wxDC which was used to paint on.
+
+        @param propGrid
+            Property grid to which the cell belongs.
+
+        @param cell
+            Cell information.
 
         @param flags
             Same as those passed to PreDrawCell().
@@ -2290,6 +2376,24 @@ public:
     /**
         Returns @true if rendered something in the foreground (text or
         bitmap.
+
+        @param dc
+            wxDC to paint on.
+
+        @param rect
+            Box reserved for drawing.
+
+        @param propertyGrid
+            Property grid in which property is displayed.
+
+        @param property
+            Property to be rendered.
+
+        @param column
+            Property cell column.
+
+        @param item
+            Index of chosen item if combo popup is drawn, -1 otherwise.
 
         @param flags
             See @ref pgcellrenderer_render_flags "list of render flags".
@@ -2336,7 +2440,7 @@ protected:
     wxColour    m_bgCol;
     wxFont      m_font;
 
-    /** True if m_text is valid and specified.
+    /** @true if m_text is valid and specified.
     */
     bool        m_hasValidText;
 };
@@ -2680,7 +2784,7 @@ public:
 
     /**
         Returns array of values matching the given strings. Unmatching strings
-        result in wxPG_INVALID_VALUE entry in array.
+        result in ::wxPG_INVALID_VALUE entry in array.
     */
     wxArrayInt GetValuesForStrings( const wxArrayString& strings ) const;
 

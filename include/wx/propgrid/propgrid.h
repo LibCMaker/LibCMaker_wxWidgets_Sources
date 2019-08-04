@@ -654,8 +654,7 @@ enum wxPG_INTERNAL_FLAGS
 // Use Freeze() and Thaw() respectively to disable and enable drawing. This
 // will also delay sorting etc. miscellaneous calculations to the last
 // possible moment.
-class WXDLLIMPEXP_PROPGRID wxPropertyGrid : public wxControl,
-                                            public wxScrollHelper,
+class WXDLLIMPEXP_PROPGRID wxPropertyGrid : public wxScrolled<wxControl>,
                                             public wxPropertyGridInterface
 {
     friend class wxPropertyGridEvent;
@@ -958,9 +957,6 @@ public:
     // Returns true if selection finished successfully. Usually only fails if
     // current value in editor is not valid.
     // This function clears any previous selection.
-    // In wxPropertyGrid 1.4, this member function used to generate
-    // wxEVT_PG_SELECTED. In wxWidgets 2.9 and later, it no longer
-    // does that.
     bool SelectProperty( wxPGPropArg id, bool focus = false );
 
     // Set entire new selection from given list of properties.
@@ -1166,7 +1162,7 @@ public:
 
     const wxPGCommonValue* GetCommonValue( unsigned int i ) const
     {
-        return (wxPGCommonValue*) m_commonValues[i];
+        return m_commonValues[i];
     }
 
     // Returns number of common values.
@@ -1501,12 +1497,6 @@ protected:
     // Current non-client width (needed when auto-centering).
     int                 m_ncWidth;
 
-    // Non-client width (auto-centering helper).
-    //int                 m_fWidth;
-
-    // Previously recorded scroll start position.
-    int                 m_prevVY;
-
     // The gutter spacing in front and back of the image.
     // This determines the amount of spacing in front of each item
     int                 m_gutterWidth;
@@ -1613,9 +1603,6 @@ protected:
 #else
     bool                m_editorFocused;
 #endif
-
-    // 1 if m_latsCaption is also the bottommost caption.
-    //unsigned char       m_lastCaptionBottomnest;
 
     unsigned char       m_vspacing;
 
@@ -1947,63 +1934,6 @@ private:
 
     wxDECLARE_EVENT_TABLE();
 };
-
-// -----------------------------------------------------------------------
-//
-// Bunch of inlines that need to resolved after all classes have been defined.
-//
-
-inline bool wxPropertyGridPageState::IsDisplayed() const
-{
-    return ( this == m_pPropGrid->GetState() );
-}
-
-inline unsigned int wxPropertyGridPageState::GetActualVirtualHeight() const
-{
-    return DoGetRoot()->GetChildrenHeight(GetGrid()->GetRowHeight());
-}
-
-inline wxString wxPGProperty::GetHintText() const
-{
-    wxVariant vHintText = GetAttribute(wxPG_ATTR_HINT);
-
-#if wxPG_COMPATIBILITY_1_4
-    // Try the old, deprecated "InlineHelp"
-    if ( vHintText.IsNull() )
-        vHintText = GetAttribute(wxPG_ATTR_INLINE_HELP);
-#endif
-
-    if ( !vHintText.IsNull() )
-        return vHintText.GetString();
-
-    return wxEmptyString;
-}
-
-inline int wxPGProperty::GetDisplayedCommonValueCount() const
-{
-    if ( HasFlag(wxPG_PROP_USES_COMMON_VALUE) )
-    {
-        wxPropertyGrid* pg = GetGrid();
-        if ( pg )
-            return (int) pg->GetCommonValueCount();
-    }
-    return 0;
-}
-
-inline void wxPGProperty::SetDefaultValue( wxVariant& value )
-{
-    SetAttribute(wxPG_ATTR_DEFAULT_VALUE, value);
-}
-
-inline void wxPGProperty::SetEditor( const wxString& editorName )
-{
-    m_customEditor = wxPropertyGridInterface::GetEditorByName(editorName);
-}
-
-inline bool wxPGProperty::SetMaxLength( int maxLen )
-{
-    return GetGrid()->SetPropertyMaxLength(this,maxLen);
-}
 
 // -----------------------------------------------------------------------
 
@@ -2343,7 +2273,6 @@ protected:
     #undef wxPG_FL_MOUSE_CAPTURED
     #undef wxPG_FL_INITIALIZED
     #undef wxPG_FL_ACTIVATION_BY_CLICK
-    #undef wxPG_SUPPORT_TOOLTIPS
     #undef wxPG_ICON_WIDTH
     #undef wxPG_USE_RENDERER_NATIVE
 // Following are needed by the manager headers

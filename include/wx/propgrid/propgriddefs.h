@@ -52,9 +52,6 @@
     // 1 if wxRendererNative should be employed
     #define wxPG_USE_RENDERER_NATIVE    1
 
-    // Enable tooltips
-    #define wxPG_SUPPORT_TOOLTIPS       1
-
     // width of optional bitmap/image in front of property
     #define wxPG_CUSTOM_IMAGE_WIDTH     20
 
@@ -83,9 +80,6 @@
     #define wxPG_ICON_WIDTH             9
     // 1 if wxRendererNative should be employed
     #define wxPG_USE_RENDERER_NATIVE    1
-
-    // Enable tooltips
-    #define wxPG_SUPPORT_TOOLTIPS       1
 
     // width of optional bitmap/image in front of property
     #define wxPG_CUSTOM_IMAGE_WIDTH     20
@@ -116,9 +110,6 @@
     // 1 if wxRendererNative should be employed
     #define wxPG_USE_RENDERER_NATIVE    1
 
-    // Enable tooltips
-    #define wxPG_SUPPORT_TOOLTIPS       1
-
     // width of optional bitmap/image in front of property
     #define wxPG_CUSTOM_IMAGE_WIDTH     20
 
@@ -147,9 +138,6 @@
     #define wxPG_ICON_WIDTH             9
     // 1 if wxRendererNative should be employed
     #define wxPG_USE_RENDERER_NATIVE    0
-
-    // Enable tooltips
-    #define wxPG_SUPPORT_TOOLTIPS       0
 
     // width of optional bitmap/image in front of property
     #define wxPG_CUSTOM_IMAGE_WIDTH     20
@@ -195,12 +183,6 @@
     #define wxPG_COMPATIBILITY_1_4      1
 #else
     #define wxPG_COMPATIBILITY_1_4      0
-#endif
-
-// Need to force disable tooltips?
-#if !wxUSE_TOOLTIPS
-    #undef wxPG_SUPPORT_TOOLTIPS
-    #define wxPG_SUPPORT_TOOLTIPS       0
 #endif
 
 // Set 1 to include advanced properties (wxFontProperty, wxColourProperty, etc.)
@@ -400,16 +382,16 @@ enum wxPG_SETVALUE_FLAGS
 //
 // Valid constants for wxPG_UINT_BASE attribute
 // (long because of wxVariant constructor)
-#define wxPG_BASE_OCT                       (long)8
-#define wxPG_BASE_DEC                       (long)10
-#define wxPG_BASE_HEX                       (long)16
-#define wxPG_BASE_HEXL                      (long)32
+#define wxPG_BASE_OCT                       8L
+#define wxPG_BASE_DEC                       10L
+#define wxPG_BASE_HEX                       16L
+#define wxPG_BASE_HEXL                      32L
 
 //
 // Valid constants for wxPG_UINT_PREFIX attribute
-#define wxPG_PREFIX_NONE                    (long)0
-#define wxPG_PREFIX_0x                      (long)1
-#define wxPG_PREFIX_DOLLAR_SIGN             (long)2
+#define wxPG_PREFIX_NONE                    0L
+#define wxPG_PREFIX_0x                      1L
+#define wxPG_PREFIX_DOLLAR_SIGN             2L
 
 // -----------------------------------------------------------------------
 // Editor class.

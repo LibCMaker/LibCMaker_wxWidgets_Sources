@@ -827,11 +827,7 @@ bool wxWindowMSW::SetFont(const wxFont& font)
         // just been reset and in this case we need to change the font used by
         // the native window to the default for this class, i.e. exactly what
         // GetFont() returns
-        WXHANDLE hFont = GetFont().GetResourceHandle();
-
-        wxASSERT_MSG( hFont, wxT("should have valid font") );
-
-        ::SendMessage(hWnd, WM_SETFONT, (WPARAM)hFont, MAKELPARAM(TRUE, 0));
+        wxSetWindowFont(hWnd, GetFont());
     }
 
     return true;
@@ -1955,7 +1951,8 @@ void wxWindowMSW::DoGetPosition(int *x, int *y) const
         *y = pos.y;
 }
 
-void wxWindowMSW::DoScreenToClient(int *x, int *y) const
+/* static */
+void wxWindowMSW::MSWDoScreenToClient(WXHWND hWnd, int *x, int *y)
 {
     POINT pt;
     if ( x )
@@ -1963,7 +1960,7 @@ void wxWindowMSW::DoScreenToClient(int *x, int *y) const
     if ( y )
         pt.y = *y;
 
-    ::ScreenToClient(GetHwnd(), &pt);
+    ::ScreenToClient(hWnd, &pt);
 
     if ( x )
         *x = pt.x;
@@ -1971,7 +1968,8 @@ void wxWindowMSW::DoScreenToClient(int *x, int *y) const
         *y = pt.y;
 }
 
-void wxWindowMSW::DoClientToScreen(int *x, int *y) const
+/* static */
+void wxWindowMSW::MSWDoClientToScreen(WXHWND hWnd, int *x, int *y)
 {
     POINT pt;
     if ( x )
@@ -1979,12 +1977,22 @@ void wxWindowMSW::DoClientToScreen(int *x, int *y) const
     if ( y )
         pt.y = *y;
 
-    ::ClientToScreen(GetHwnd(), &pt);
+    ::ClientToScreen(hWnd, &pt);
 
     if ( x )
         *x = pt.x;
     if ( y )
         *y = pt.y;
+}
+
+void wxWindowMSW::DoScreenToClient(int *x, int *y) const
+{
+    MSWDoScreenToClient(GetHwnd(), x, y);
+}
+
+void wxWindowMSW::DoClientToScreen(int *x, int *y) const
+{
+    MSWDoClientToScreen(GetHwnd(), x, y);
 }
 
 bool
@@ -4706,6 +4714,103 @@ wxWindowMSW::MSWOnMeasureItem(int id, WXMEASUREITEMSTRUCT *itemStruct)
 }
 
 // ---------------------------------------------------------------------------
+// DPI
+// ---------------------------------------------------------------------------
+
+namespace
+{
+
+static inline const wxTopLevelWindow* wxGetWinTLW(const wxWindow* win)
+{
+    if ( win )
+    {
+        const wxWindow* tlwWin = wxGetTopLevelParent(const_cast<wxWindow*>(win));
+        return wxDynamicCast(tlwWin, wxTopLevelWindow);
+    }
+    else if ( wxTheApp )
+    {
+        wxWindow* window = wxTheApp->GetTopWindow();
+        if ( window )
+        {
+            return wxDynamicCast(wxGetTopLevelParent(window), wxTopLevelWindow);
+        }
+    }
+
+    return NULL;
+}
+
+}
+
+/*extern*/
+int wxGetSystemMetrics(int nIndex, const wxWindow* win)
+{
+#if wxUSE_DYNLIB_CLASS
+    const wxTopLevelWindow* tlw = wxGetWinTLW(win);
+
+    if ( tlw )
+    {
+        typedef int (WINAPI * GetSystemMetricsForDpi_t)(int nIndex, UINT dpi);
+        static GetSystemMetricsForDpi_t s_pfnGetSystemMetricsForDpi = NULL;
+        static bool s_initDone = false;
+
+        if ( !s_initDone )
+        {
+            wxLoadedDLL dllUser32("user32.dll");
+            wxDL_INIT_FUNC(s_pfn, GetSystemMetricsForDpi, dllUser32);
+            s_initDone = true;
+        }
+
+        if ( s_pfnGetSystemMetricsForDpi )
+        {
+            WindowHDC hdc(tlw->GetHWND());
+            const int dpi = ::GetDeviceCaps(hdc, LOGPIXELSY);
+            return s_pfnGetSystemMetricsForDpi(nIndex, (UINT)dpi);
+        }
+    }
+#else
+    wxUnusedVar(win);
+#endif // wxUSE_DYNLIB_CLASS
+
+    return ::GetSystemMetrics(nIndex);
+}
+
+/*extern*/
+bool wxSystemParametersInfo(UINT uiAction, UINT uiParam, PVOID pvParam, UINT fWinIni, const wxWindow* win)
+{
+#if wxUSE_DYNLIB_CLASS
+    const wxTopLevelWindow* tlw = wxGetWinTLW(win);
+
+    if ( tlw )
+    {
+        typedef int (WINAPI * SystemParametersInfoForDpi_t)(UINT uiAction, UINT uiParam, PVOID pvParam, UINT fWinIni, UINT dpi);
+        static SystemParametersInfoForDpi_t s_pfnSystemParametersInfoForDpi = NULL;
+        static bool s_initDone = false;
+
+        if ( !s_initDone )
+        {
+            wxLoadedDLL dllUser32("user32.dll");
+            wxDL_INIT_FUNC(s_pfn, SystemParametersInfoForDpi, dllUser32);
+            s_initDone = true;
+        }
+
+        if ( s_pfnSystemParametersInfoForDpi )
+        {
+            WindowHDC hdc(tlw->GetHWND());
+            const int dpi = ::GetDeviceCaps(hdc, LOGPIXELSY);
+            if ( s_pfnSystemParametersInfoForDpi(uiAction, uiParam, pvParam, fWinIni, (UINT)dpi) == TRUE )
+            {
+                return true;
+            }
+        }
+    }
+#else
+    wxUnusedVar(win);
+#endif // wxUSE_DYNLIB_CLASS
+
+    return ::SystemParametersInfo(uiAction, uiParam, pvParam, fWinIni) == TRUE;
+}
+
+// ---------------------------------------------------------------------------
 // colours and palettes
 // ---------------------------------------------------------------------------
 
@@ -4989,7 +5094,7 @@ wxColour wxWindowMSW::MSWGetThemeColour(const wchar_t *themeName,
                 break;
             default:
                 wxFAIL_MSG(wxT("unsupported theme colour"));
-        };
+        }
 
         wxUxThemeHandle hTheme((const wxWindow *)this, themeName);
         COLORREF col;
@@ -7425,7 +7530,12 @@ static TEXTMETRIC wxGetTextMetrics(const wxWindowMSW *win)
 
 #if !wxDIALOG_UNIT_COMPATIBILITY
     // and select the current font into it
-    HFONT hfont = GetHfontOf(win->GetFont());
+
+    // Note that it's important to extend the lifetime of the possibly
+    // temporary wxFont returned by GetFont() to ensure that its HFONT remains
+    // valid.
+    const wxFont& f(win->GetFont());
+    HFONT hfont = GetHfontOf(f);
     if ( hfont )
     {
         hfont = (HFONT)::SelectObject(hdc, hfont);
